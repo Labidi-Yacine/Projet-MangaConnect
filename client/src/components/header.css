@@ -1,0 +1,64 @@
+.logo {
+  height: 70px;
+}
+
+.catalogue-logo {
+  height:40px;
+  /* margin-left: 8px; */
+  /* vertical-align: middle; */
+}
+
+.profil-logo {
+  height:40px;
+  color: white;
+  /* margin-left: 8px; */
+  /* vertical-align: middle; */
+}
+
+
+.navbartoggle {
+  background-color: gray;
+}
+
+/* .navbar-nav .nav-link {
+  position: relative;
+  padding: 30px 70px;
+  margin-left: 50px;
+  margin-right: 50px;
+} */
+
+.navbar-nav .nav-link:hover {
+  background-color: rgba(24, 24, 57, 1); /* Bleu foncé */
+  color: white; /* Assurez-vous que le texte reste lisible */
+  /* border-radius: 5px;  */
+}
+
+.navbar {
+  border-bottom: 3px solid rgb(8, 8, 81);
+}
+
+/* New styles for auth links */
+.auth-links {
+  margin-left: auto;
+}
+
+.auth-link {
+  margin-right: 20px; /* Space between Connexion and Inscription */
+}
+
+ .auth-link:last-child {
+  margin-right: 50px;
+}
+
+/* .cata-link {
+  margin-left: 780px;
+}
+
+.profil-link {
+  margin-right: 80px;
+}
+
+.connected {
+  margin-right: 30px;
+  text-align: center;
+} */
