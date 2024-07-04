@@ -46,7 +46,7 @@ const Login = ({ setLoggedInUser }) => {
                 <input
                     type="password"
                     className="form-control mb-2"
-                    placeholder="Password"
+                    placeholder="Mot de Passe"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
@@ -58,8 +58,8 @@ const Login = ({ setLoggedInUser }) => {
                         checked={notRobot}
                         onChange={(e) => setNotRobot(e.target.checked)}
                     />
-                    <label className="form-check-label" htmlFor="notRobot">Je ne suis pas un robot</label>
-                </div>
+                    <label className="form-check-label text-danger" htmlFor="notRobot">* Je ne suis pas un robot</label>
+                    </div>
                 <button className="btn btn-primary" onClick={handleLogin}>Login</button>
             </div>
             {error && <div className="alert alert-danger mt-2">{error}</div>}

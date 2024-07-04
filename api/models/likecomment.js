@@ -1,41 +1,37 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const User = require('./user');
-const Comment = require('./comment')
+module.exports = (sequelize, DataTypes) => {
 
 const LikeComment = sequelize.define('LikeComment', {
   id: {
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true,
-    autoIncrement: true
   },
-  comment_id: {
+  commentId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
+    field: 'comment_id',
     references: {
-      model: Comment,
-      key: 'id'
+      model: 'Comments',
+      key: 'id',
     },
-    onDelete: 'CASCADE'
   },
-  user_id: {
+  userId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
+    field: 'user_id',
     references: {
-      model: User,
-      key: 'id'
+      model: 'User',
+      key: 'id',
     },
-    onDelete: 'CASCADE'
-  }
+  },
 }, {
+  timestamps: false,
   tableName: 'likes_comments',
-  timestamps: false
 });
 
-// LikeComment.belongsTo(Comment, { foreignKey: 'comment_id' });
-// LikeComment.belongsTo(User, { foreignKey: 'user_id' });
+LikeComment.associate = (models) => {
+  LikeComment.belongsTo(models.Comment, { foreignKey: 'comment_id', as: 'Comment' });
+  LikeComment.belongsTo(models.User, { foreignKey: 'user_id', as: 'User' });
+};
 
-// Comment.hasMany(LikeComment, { foreignKey: 'comment_id', onDelete: 'CASCADE' });
-// User.hasMany(LikeComment, { foreignKey: 'user_id', onDelete: 'CASCADE' });
-
-module.exports = LikeComment;
+return LikeComment}

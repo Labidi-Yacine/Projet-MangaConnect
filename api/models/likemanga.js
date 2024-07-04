@@ -1,39 +1,38 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const User = require('./user');
+module.exports = (sequelize, DataTypes) => {
 
-class LikeManga extends Model {}
-
-LikeManga.init({
+const LikeManga = sequelize.define('LikeManga', {
   id: {
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true,
-    autoIncrement: true
   },
   mangaName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    field: 'mangaName',
   },
   userId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    field: 'userId',
     references: {
-      model: User,
-      key: 'id'
-    }
+      model: 'User',
+      key: 'id',
+    },
   },
   createdAt: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  }
+    defaultValue: DataTypes.NOW,
+    field: 'createdAt',
+  },
 }, {
-  sequelize,
-  modelName: 'LikeManga',
+  timestamps: false,
   tableName: 'likes_manga',
-  timestamps: false
 });
 
-User.hasMany(LikeManga, { foreignKey: 'userId', onDelete: 'CASCADE' });
-LikeManga.belongsTo(User, { foreignKey: 'userId' });
+LikeManga.associate = (models) => {
+  LikeManga.belongsTo(models.User, { foreignKey: 'userId', as: 'User' });
 
-module.exports = LikeManga;
+}
+
+return LikeManga }

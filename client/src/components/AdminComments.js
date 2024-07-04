@@ -3,18 +3,46 @@ import { Table, Button } from 'react-bootstrap';
 
 const AdminComments = () => {
   const [comments, setComments] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch('/api/admin/comments')
-      .then(response => response.json())
-      .then(data => setComments(data));
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setComments(data);
+        } else {
+          throw new Error('Invalid data format');
+        }
+      })
+      .catch(error => {
+        setError(error.message);
+      });
   }, []);
 
   const deleteComment = (commentId) => {
     fetch(`/api/admin/comments/delete/${commentId}`, {
       method: 'DELETE',
-    }).then(() => setComments(comments.filter(comment => comment.id !== commentId)));
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      setComments(comments.filter(comment => comment.id !== commentId));
+    })
+    .catch(error => {
+      setError(error.message);
+    });
   };
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div>

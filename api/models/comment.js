@@ -1,48 +1,48 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const User = require('./user');
-const LikeComment = require('./likecomment');
-const Commentreplies = require('./commentreplies')
+module.exports = (sequelize, DataTypes) => {
 
-
-class Comment extends Model {}
-
-Comment.init({
+const Comment = sequelize.define('Comment', {
   id: {
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true,
-    autoIncrement: true
   },
   mangaName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    field: 'manga_name',
   },
   scan: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
   },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    field: 'user_id',
+    references: {
+      model: 'User',
+      key: 'id',
+    },
   },
   comment: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: false,
   },
-  created_at: {
+  createdAt: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  }
+    defaultValue: DataTypes.NOW,
+    field: 'created_at',
+  },
 }, {
-  sequelize,
-  modelName: 'Comment',
+  timestamps: false,
   tableName: 'comments',
-  timestamps: false
 });
 
-Comment.belongsTo(User, { foreignKey: 'userId' });
+Comment.associate = (models) => {
+  Comment.belongsTo(models.User, { foreignKey: 'user_id', as: 'User' });  // Assurez-vous que 'User' correspond à votre modèle User
+  Comment.hasMany(models.CommentReply, { foreignKey: 'comment_id', as: 'CommentReplies' });
+        Comment.hasMany(models.LikeComment, { foreignKey: 'comment_id', as: 'LikeComments' });
+  // Définissez d'autres associations si nécessaire
+};
 
-Comment.hasMany(LikeComment, { foreignKey: 'comment_id' });
-Comment.hasMany(Commentreplies, { foreignKey: 'comment_id' });
-
-module.exports = Comment;
+return Comment }

@@ -1,18 +1,27 @@
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
-const db = mysql.createConnection({
+module.exports = {
     host: 'localhost',
     user: 'root',
     password: 'admin',
-    database: 'manga_db'
-});
+    database: 'manga_db',
+    dialect: 'mysql',
 
-db.connect((err) => {
-    if (err) {
-        console.error('Error connecting to the database:', err);
-        return;
-    }
-    console.log('Connected to the MySQL  MANGA_database');
-});
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+}};
 
-module.exports = db;
+
+
+// db.connect((err) => {
+//     if (err) {
+//         console.error('Error connecting to the database:', err);
+//         return;
+//     }
+//     console.log('Connected to the MySQL  MANGA_database');
+// });
+
+// module.exports = db;

@@ -7,7 +7,10 @@ const commentController = require('../controllers/commentController');
 router.post('/add', isAuthenticated, commentController.addComment);
 
 // Récupérer les commentaires et leurs réponses, incluant l'état "liked" (authentifié ou non)
-router.get('/:mangaName/:scan', commentController.getCommentsWithReplies);
+// router.get('/:mangaName/:scan', commentController.getCommentsWithReplies);
+
+router.get('/:mangaName/:scan/comments', commentController.getCommentWithRepliesAndLike);
+
 
 // Récupérer les réponses d'un utilisateur (authentifié)
 router.get('/replies', isAuthenticated, commentController.getUserReplies);

@@ -16,6 +16,7 @@ const AdminMangaManagement = () => {
     const fetchMangas = async () => {
         try {
             const response = await axios.get('/api/admin/mangas');
+            console.log('Mangas reçus:', response.data); // Vérification des données
             setMangas(response.data);
         } catch (error) {
             console.error('Erreur lors de la récupération des mangas:', error);
@@ -96,16 +97,16 @@ const AdminMangaManagement = () => {
                     </tr>
                 </thead>
                 <tbody className='text-center'>
-                    {mangas.map((manga, index) => (
-                        <tr key={manga.title}>
-                            <td>{index + 1}</td>
-                            <td>{manga.title}</td>
+                    {mangas.map((manga) => (
+                        <tr key={manga.id}>
+                            <td>{manga.id}</td>
+                            <td>{manga.name}</td>
                             <td className='d-flex justify-content-evenly'>
-                                <Button variant="danger" onClick={() => deleteManga(manga.title)}>Supprimer</Button>
-                                <Link to={`/admin/mangas/${manga.title}/edit`} className="ml-3">
+                                <Button variant="danger" onClick={() => deleteManga(manga.name)}>Supprimer</Button>
+                                <Link to={`/admin/mangas/${manga.name}/edit`} className="ml-3">
                                     <Button >Modifier Manga</Button>
                                 </Link>
-                                <Link to={`/admin/mangas/${manga.title}/scans/edit`} className="ml-3">
+                                <Link to={`/admin/mangas/${manga.name}/scans/edit`} className="ml-3">
                                     <Button >Modifier Scans</Button>
                                 </Link>
                             </td>

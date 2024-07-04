@@ -9,6 +9,7 @@ const AdminEditManga = () => {
   const [newMangaName, setNewMangaName] = useState('');
   const [error, setError] = useState(null);
   const [newSynopsis, setNewSynopsis] = useState(''); // Ajout du state pour le nouveau synopsis
+  
 
 
   useEffect(() => {

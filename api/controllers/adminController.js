@@ -1,10 +1,25 @@
 const fs = require('fs');
 const path = require('path');
+const escapeHtml = require('escape-html');
+
 // const { User, Comment, Manga } = require('../models');
-const User = require('../models/user');
-const Comment = require('../models/comment');
-const Manga = require('../models/manga');
+// const User = require('../models/user');
+// const Comment = require('../models/comment');
+// const Manga = require('../models/manga');
 const multer = require('multer');
+
+
+
+const db = require('../models')
+// create main Model
+const Comment = db.Comment
+const CommentReply = db.CommentReply
+const LikeComment = db.LikeComment
+const User = db.User
+const Manga = db.Manga;
+const sequelize = db.sequelize;
+
+
 
 // Configuration de multer pour enregistrer les images dans le dossier covers
 const storage = multer.diskStorage({
@@ -19,28 +34,31 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Récupérer la liste des mangas
-exports.getMangas = (req, res) => {
-    const mangasFolderPath = path.join(__dirname, '..', 'Mangas');
-    console.log("Chemin du dossier Mangas:", mangasFolderPath);
+// exports.getMangas = (req, res) => {
+//     const mangaFolderPath = path.join(__dirname, '..', 'Mangas');
 
-    fs.readdir(mangasFolderPath, (err, files) => {
-        if (err) {
-            console.error('Erreur lors de la lecture du dossier des mangas:', err);
-            res.status(500).json({ error: 'Erreur lors de la lecture du dossier des mangas' });
-            return;
-        }
+//     fs.readdir(mangaFolderPath, (err, files) => {
+//         if (err) {
+//             console.error('Erreur lors de la lecture du dossier des mangas:', err);
+//             return res.status(500).json({ error: 'Erreur lors de la lecture du dossier des mangas' });
+//         }
 
-        const mangas = files.filter(file => {   
-            const filePath = path.join(mangasFolderPath, file);
-            return fs.statSync(filePath).isDirectory();
-        }).map((file, index) => {
-            return { id: index + 1, title: file };
-        });
+//         const mangas = files.filter(file => fs.statSync(path.join(mangaFolderPath, file)).isDirectory());
+//         res.json(mangas);
+//     });
+// };
 
-        console.log("Mangas trouvés:", mangas);
+
+exports.getMangas = async (req, res) => {
+    try {
+        const mangas = await Manga.findAll();
         res.json(mangas);
-    });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des mangas:', error);
+        res.status(500).json({ error: 'Erreur lors de la récupération des mangas' });
+    }
 };
+
 
 // Récupérer les détails d'un manga spécifique
 exports.getMangaByName = async (req, res) => {
@@ -55,7 +73,7 @@ exports.getMangaByName = async (req, res) => {
             return res.status(404).json({ error: 'Manga non trouvé' });
         }
 
-        const synopsis = manga.synopsis || '';
+        const synopsis = escapeHtml(manga.synopsis || '');
         const coverImage = manga.coverImage ? path.join('/api', manga.coverImage) : null;
         const mangaDetails = {
             name: mangaName,
@@ -75,7 +93,8 @@ exports.getMangaByName = async (req, res) => {
 exports.addManga = [
     upload.single('coverImage'),
     async (req, res) => {
-        const { mangaName, synopsis } = req.body;
+        const mangaName = escapeHtml(req.body.mangaName);
+        const synopsis = escapeHtml(req.body.synopsis);
         const coverImage = req.file ? req.file.filename : null;
 
         if (coverImage) {
@@ -156,8 +175,9 @@ exports.deleteManga = async (req, res) => {
 };
 
 exports.updateManga = async (req, res) => {
-    const { mangaName } = req.params;
-    const { newMangaName, synopsis } = req.body;
+    const mangaName = escapeHtml(req.params.mangaName);
+    const newMangaName = escapeHtml(req.body.newMangaName);
+    const synopsis = escapeHtml(req.body.synopsis);
 
     const oldMangaPath = path.join(__dirname, '..', 'Mangas', mangaName);
     const newMangaPath = path.join(__dirname, '..', 'Mangas', newMangaName);
@@ -180,7 +200,8 @@ exports.updateManga = async (req, res) => {
 };
 
 exports.addScan = (req, res) => {
-    const { mangaName, scanName } = req.body;
+    const mangaName = escapeHtml(req.body.mangaName);
+    const scanName = escapeHtml(req.body.scanName);
     const pdf = req.file;
 
     if (!mangaName || !scanName || !pdf) {
@@ -223,8 +244,9 @@ exports.deleteScan = (req, res) => {
 };
 
 exports.updateScan = async (req, res) => {
-    const { mangaName, scanName } = req.params;
-    const { newScanName } = req.body;
+    const mangaName = escapeHtml(req.params.mangaName);
+    const scanName = escapeHtml(req.params.scanName);
+    const newScanName = escapeHtml(req.body.newScanName);
 
     const oldScanPath = path.join(__dirname, '..', 'Mangas', mangaName, scanName);
     const newScanPath = path.join(__dirname, '..', 'Mangas', mangaName, newScanName);
@@ -272,7 +294,9 @@ exports.deleteUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     const { userId } = req.params;
-    const { username, email, role } = req.body;
+    const username = escapeHtml(req.body.username);
+    const email = escapeHtml(req.body.email);
+    const role = escapeHtml(req.body.role);
 
     try {
         const updatedUser = await User.update(
@@ -307,16 +331,17 @@ exports.getComments = async (req, res) => {
 
         const formattedComments = comments.map(comment => ({
             id: comment.id,
-            comment: comment.comment,
-            username: comment.User.username // Assurez-vous que cela est correct
+            comment: escapeHtml(comment.comment),
+            username: escapeHtml(comment.User.username)
         }));
 
-        res.json(formattedComments);
+        res.status(200).json(formattedComments); // Ajoutez un statut HTTP pour la réponse
     } catch (err) {
         console.error('Erreur lors de la récupération des commentaires:', err);
         res.status(500).json({ error: 'Erreur lors de la récupération des commentaires' });
     }
 };
+
 
 exports.deleteComment = async (req, res) => {
     const { commentId } = req.params;

@@ -1,6 +1,16 @@
 const path = require('path');
 const fs = require('fs');
-const Manga = require('../models/manga');
+const escapeHtml = require('escape-html');
+
+// const Manga = require('../models/manga');
+
+
+
+const db = require('../models')
+// create main Model
+const Manga = db.Manga
+
+
 
 exports.getAllMangas = (req, res) => {
     const mangaFolderPath = path.join(__dirname, '..', 'Mangas');
@@ -18,7 +28,7 @@ exports.getAllMangas = (req, res) => {
 
 exports.getMangaDetails = async (req, res) => {
     try {
-        const mangaName = req.params.mangaName;
+        const mangaName = escapeHtml(req.params.mangaName);
         const mangaFolderPath = path.join(__dirname, '..', 'Mangas', mangaName);
 
         // Check if manga directory exists

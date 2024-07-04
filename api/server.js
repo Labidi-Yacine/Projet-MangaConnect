@@ -4,6 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const rateLimit = require('express-rate-limit'); // Ajouter express-rate-limit
 const sequelize = require('./config/sequelize');
 const db = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
@@ -14,13 +15,24 @@ const scansRoutes = require('./routes/scans');
 const adminRoutes = require('./routes/adminRoutes');
 
 
+
 const app = express();
 const port = 3001;
 
+
+// Configure Express pour faire confiance aux en-têtes proxy
+app.set('trust proxy', 1);
+
+
 app.use(cors({
-    origin: '*', // Modifier cette ligne pour la production
+    origin: 'http://localhost:3000', // Ici 'http://localhost:3000' sera modifié par le domaine de mon app front-end
     credentials: true
 }));
+
+
+// app.use(cookieParser());
+
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -37,6 +49,36 @@ app.use(session({
 }));
 
 sessionStore.sync();
+
+// Synchronisation des modèles avec la base de données
+sequelize.sync()
+  .then(() => {
+    console.log('All models were synchronized successfully.');
+  })
+  .catch(err => {
+    console.error('Error synchronizing models:', err);
+  });
+
+// Configuration de express-rate-limit
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 5, // 5 tentatives max
+//   message: "Trop de tantative de connexion pour cet ip ! Réessayez plus tard."
+// });
+
+// express-rate-limit seulement sur les routes d'authentification
+// app.use('/api/auth', limiter);
+
+// Configuration de csurf pour générer et vérifier les tokens CSRF
+// const csrfProtection = csurf({ cookie: true });
+
+// app.use(csrfProtection);
+
+// // Middleware pour ajouter le token CSRF aux réponses
+// app.use((req, res, next) => {
+//   res.cookie('XSRF-TOKEN', req.csrfToken());
+//   next();
+// });
 
 app.use('/api/auth', authRoutes);
 app.use('/api/comments', commentRoutes);

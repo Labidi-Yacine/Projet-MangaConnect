@@ -1,28 +1,28 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/sequelize');
+module.exports = (sequelize, DataTypes) => {
 
 const Manga = sequelize.define('Manga', {
   id: {
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true,
-    autoIncrement: true
   },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true
+    unique: true,
   },
   synopsis: {
     type: DataTypes.TEXT,
-    allowNull: true
+    allowNull: true,
   },
   coverImage: {
     type: DataTypes.STRING,
-    allowNull: true
-  }
+    allowNull: true,
+    // field: 'cover_image',
+  },
 }, {
+  timestamps: false,
   tableName: 'mangas',
-  timestamps: false
 });
 
-module.exports = Manga;
+return Manga }

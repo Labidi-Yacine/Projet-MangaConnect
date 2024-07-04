@@ -1,7 +1,14 @@
 const bcrypt = require('bcryptjs');
+const escapeHtml = require('escape-html'); // Ajouter escape-html
 const { validationResult } = require('express-validator');
-const db = require('../config/database');
-const User = require('../models/user')
+// const db = require('../config/database');
+// const User = require('../models/user')
+
+const db = require('../models')
+// create main Model
+
+const User = db.User
+
 
 //inscription
 exports.register = async (req, res) => {
@@ -19,8 +26,8 @@ exports.register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = await User.create({
-            username,
-            email,
+            username: escapeHtml(username), // Échapper le nom d'utilisateur
+            email: escapeHtml(email), // Échapper l'email
             password: hashedPassword,
             isAdmin: isAdmin || false
         });
@@ -58,8 +65,8 @@ exports.login = async (req, res) => {
 
         req.session.user = {
             id: user.id,
-            username: user.username,
-            email: user.email,
+            username: escapeHtml(user.username), // Échapper le nom d'utilisateur
+            email: escapeHtml(user.email), // Échapper l'email
             isAdmin: user.isAdmin
         };
 
@@ -74,7 +81,10 @@ exports.login = async (req, res) => {
 exports.checkAuth = (req, res) => {
     if (req.session.user) {
         const { username, email, isAdmin } = req.session.user;
-        res.status(200).json({ isAuthenticated: true, username, email, isAdmin });
+        res.status(200).json({ isAuthenticated: true,
+            username: escapeHtml(username), // Échapper le nom d'utilisateur
+            email: escapeHtml(email), // Échapper l'email
+            isAdmin });
     } else {
         res.status(401).json({ isAuthenticated: false, message: 'Utilisateur non authentifié' });
     }
@@ -104,7 +114,7 @@ exports.updateUserInfo = async (req, res) => {
 
     try {
         if (username) {
-            await User.update({ username }, { where: { id: userId } });
+            await User.update({ username: escapeHtml(username) }, { where: { id: userId } });
             req.session.user.username = username;
         }
 

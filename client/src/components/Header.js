@@ -16,61 +16,11 @@ const Header = ({ loggedInUser, setLoggedInUser }) => {
   };
 
   return (
-    // <Navbar expanded={expanded} onToggle={handleToggle} bg="black" variant="dark" expand="lg" fixed="top">
-    //   <Container className='bg-black'>
-    //     <Navbar.Brand as={Link} to="/" className="navbar-logo">
-    //       <img src='/logo.png' alt='Logo' />
-    //     </Navbar.Brand>
-
-    //     <Navbar.Toggle aria-controls="navbar-nav" onClick={handleToggle} />
-
-    //     <Navbar.Collapse id="navbar-nav" className="justify-content-between">
-    //       <Nav>
-    //         <Nav.Link as={Link} to="/" onClick={handleSelect}>Home</Nav.Link>
-    //         <Nav.Link as={Link} to="/catalogue" onClick={handleSelect}>Catalogue</Nav.Link>
-    //         {loggedInUser && (
-    //           <Nav.Link as={Link} to="/profil" onClick={handleSelect}>Profil</Nav.Link>
-    //         )}
-    //       </Nav>
-
-    //       <Nav>
-    //         {loggedInUser ? (
-    //           <>
-    //             <Navbar.Text className="mr-3">Connecté en tant que {loggedInUser}</Navbar.Text>
-    //             <Button
-    //               onClick={() => {
-    //                 fetch('/api/auth/logout', {
-    //                   method: 'POST',
-    //                   credentials: 'include',
-    //                 }).then(() => {
-    //                   setLoggedInUser('');
-    //                 });
-    //               }}
-    //               variant="secondary"
-    //             >
-    //               Déconnexion
-    //             </Button>
-    //           </>
-    //         ) : (
-    //           <>
-    //             <Nav.Link as={Link} to="/login" onClick={handleSelect}>Connexion</Nav.Link>
-    //             <Nav.Link as={Link} to="/register" onClick={handleSelect}>Inscription</Nav.Link>
-    //           </>
-    //         )}
-    //       </Nav>
-    //     </Navbar.Collapse>
-    //   </Container>
-    // </Navbar>
-
-
-
-
-
 
 <Navbar expand="lg" variant="dark" bg="black" className='nav.bar'>
     <div className="container-fluid">
       <Navbar.Brand href="/">
-        <img src="/logo.png" alt="Logo" className="logo d-inline-block align-text-top" />
+        <img src="/logoFinal.png" alt="Logo" className="logo d-inline-block align-text-top" />
       </Navbar.Brand>
 
       <Navbar.Toggle aria-controls="navbarNav "  className='navbartoggle' />

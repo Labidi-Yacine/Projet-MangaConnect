@@ -1,14 +1,38 @@
-const Comment = require('../models/comment');
-const CommentReply = require('../models/commentreplies');
-const LikeComment = require('../models/likecomment');
-const User = require('../models/user');
+// const Comment = require('../models/comment');
+// const CommentReply = require('../models/commentreplies');
+// const LikeComment = require('../models/likecomment');
+// const User = require('../models/user');
+// const { Op, fn, col } = require('sequelize');
+
+
+
+
+const db = require('../models')
+// create main Model
+const Comment = db.Comment
+const CommentReply = db.CommentReply
+const LikeComment = db.LikeComment
+const User = db.User
+const sequelize = db.sequelize; // Accéder à l'instance de Sequelize à partir de l'objet db
+const escapeHtml = require('escape-html');
+
+
+
+
+
+
 
 exports.addComment = async (req, res) => {
     try {
         const { mangaName, scan, comment } = req.body;
         const userId = req.session.user.id;
 
-        const newComment = await Comment.create({ mangaName, scan, userId, comment });
+        const newComment = await Comment.create({ 
+            mangaName: escapeHtml(mangaName),
+            scan: escapeHtml(scan), 
+            userId, 
+            comment: escapeHtml(comment)
+        });
 
         res.status(201).json({
             id: newComment.id,
@@ -24,66 +48,83 @@ exports.addComment = async (req, res) => {
     }
 };
 
-exports.getCommentsWithReplies = async (req, res) => {
+
+exports.getCommentWithRepliesAndLike = async (req, res) => {
+    const { mangaName, scan } = req.params;
+
     try {
-        const { mangaName, scan } = req.params;
-        const userId = req.session?.user?.id;
-
         const comments = await Comment.findAll({
-            where: { mangaName, scan },
-            include: [{ model: User, attributes: ['username'] }]
+            where: {
+                mangaName: escapeHtml(mangaName),
+                scan: escapeHtml(scan)
+            },
+            include: [
+                {
+                    model: User,
+                    as: 'User',
+                    attributes: ['username']
+                },
+                {
+                    model: CommentReply,
+                    as: 'CommentReplies',
+                    include: {
+                        model: User,
+                        as: 'User',
+                        attributes: ['username']
+                    }
+                },
+                {
+                    model: LikeComment,
+                    as: 'LikeComments'
+                }
+            ],
+            order: [['createdAt', 'ASC']]
         });
 
-        const commentIds = comments.map(comment => comment.id);
-        if (commentIds.length === 0) {
-            res.json(comments);
-            return;
-        }
+        const userId = req.session.user ? req.session.user.id : null;
 
-        const replies = await CommentReply.findAll({
-            where: { comment_id: commentIds },
-            include: [{ model: User, attributes: ['username'] }]
+        const formattedComments = comments.map(comment => {
+            return {
+                id: comment.id,
+                mangaName: comment.mangaName,
+                scan: comment.scan,
+                userId: comment.userId,
+                comment: escapeHtml(comment.comment),
+                created_at: comment.createdAt,
+                username: comment.User ? comment.User.username : 'Unknown User',
+                liked: userId ? comment.LikeComments.some(like => like.userId === userId) : false,
+                replies: comment.CommentReplies.map(reply => ({
+                    id: reply.id,
+                    commentId: reply.commentId,
+                    userId: reply.userId,
+                    reply: escapeHtml(reply.reply),
+                    created_at: reply.createdAt,
+                    username: reply.User ? reply.User.username : 'Unknown User'
+                }))
+            };
         });
 
-        if (userId) {
-            const likedComments = await LikeComment.findAll({
-                where: { comment_id: commentIds, user_id: userId }
-            });
-
-            const likedCommentIds = likedComments.map(like => like.comment_id);
-
-            const commentsWithReplies = comments.map(comment => {
-                return {
-                    ...comment.get(),
-                    liked: likedCommentIds.includes(comment.id),
-                    replies: replies.filter(reply => reply.comment_id === comment.id)
-                };
-            });
-
-            res.json(commentsWithReplies);
-        } else {
-            const commentsWithReplies = comments.map(comment => {
-                return {
-                    ...comment.get(),
-                    liked: false,
-                    replies: replies.filter(reply => reply.comment_id === comment.id)
-                };
-            });
-
-            res.json(commentsWithReplies);
-        }
-    } catch (err) {
-        console.error('Erreur lors de la récupération des commentaires:', err);
-        res.status(500).json({ error: 'Erreur lors de la récupération des commentaires' });
+        res.json(formattedComments);
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
+
 
 exports.getUserReplies = async (req, res) => {
     try {
         const userId = req.session.user.id;
         const replies = await CommentReply.findAll({ where: { user_id: userId } });
 
-        res.json(replies);
+        res.json(replies.map(reply => ({
+            id: reply.id,
+            commentId: reply.commentId,
+            userId: reply.userId,
+            reply: escapeHtml(reply.reply)
+        })));
     } catch (err) {
         console.error('Erreur lors de la récupération des réponses de l\'utilisateur:', err);
         res.status(500).json({ error: 'Erreur lors de la récupération des réponses de l\'utilisateur' });
@@ -106,9 +147,16 @@ exports.deleteUserReply = async (req, res) => {
 exports.getUserComments = async (req, res) => {
     try {
         const userId = req.session.user.id;
-        const comments = await Comment.findAll({ where: { userId } });
+        const comments = await Comment.findAll({ where: { user_id: userId } });
 
-        res.json(comments);
+        res.json(comments.map(comment => ({
+            id: comment.id,
+            mangaName: comment.mangaName,
+            scan: comment.scan,
+            userId: comment.userId,
+            comment: escapeHtml(comment.comment),
+            created_at: comment.createdAt
+        })));
     } catch (err) {
         console.error('Erreur lors de la récupération des commentaires de l\'utilisateur:', err);
         res.status(500).json({ error: 'Erreur lors de la récupération des commentaires de l\'utilisateur' });
@@ -130,47 +178,105 @@ exports.deleteUserComment = async (req, res) => {
     }
 };
 
-exports.getTopLikedComments = async (req, res) => {
-    try {
-        const { mangaName, scan } = req.params;
-        console.log('Fetching top liked comments for:', mangaName, scan);
+// exports.getTopLikedComments = async (req, res) => {
+//     try {
+//         const { mangaName, scan } = req.params;
+//         console.log('Fetching top liked comments for:', mangaName, scan);
 
+//         const comments = await Comment.findAll({
+//             where: { mangaName: escapeHtml(mangaName), scan: escapeHtml(scan)},
+//             include: [
+//                 { model: User, attributes: ['username'] },
+//                 {
+//                     model: LikeComment,
+//                     attributes: []
+//                 }
+//             ],
+//             attributes: {
+//                 include: [
+//                     [sequelize.fn('COUNT', sequelize.col('id')), 'likesCount']
+//                 ]
+//             },
+//             group: ['Comment.id', 'User.id'],
+//             order: [
+//                 [sequelize.literal('likesCount'), 'DESC'],
+//                 ['createdAt', 'DESC'] // 'created_at' doit correspondre au nom de l'attribut dans votre modèle
+//             ],
+//             limit: 10
+//         });
+
+//         console.log('Fetched comments:', comments);
+//         res.json(comments);
+//     } catch (err) {
+//         console.error('Erreur lors de la récupération des commentaires les plus likés:', err);
+//         res.status(500).json({ error: 'Erreur lors de la récupération des commentaires les plus likés' });
+//     }
+// };
+
+exports.getTopLikedComments = async (req, res) => {
+    const { mangaName, scan } = req.params;
+
+    try {
+        // Query to get comments along with their like count, ordered by like count
         const comments = await Comment.findAll({
-            where: { mangaName, scan },
-            include: [
-                { model: User, attributes: ['username'] },
-                {
-                    model: LikeComment,
-                    attributes: []
-                }
-            ],
+            where: {
+                mangaName: escapeHtml(mangaName),
+                scan: escapeHtml(scan)
+            },
             attributes: {
                 include: [
-                    [sequelize.fn('COUNT', sequelize.col('LikeComments.id')), 'likesCount']
+                    [
+                        sequelize.literal(`(
+                            SELECT COUNT(*)
+                            FROM likes_comments AS like_comments
+                            WHERE like_comments.comment_id = Comment.id
+                        )`),
+                        'likeCount'
+                    ]
                 ]
             },
-            group: ['Comment.id', 'User.id'],
-            order: [
-                [sequelize.literal('likesCount'), 'DESC'],
-                ['created_at', 'DESC']
+            include: [
+                {
+                    model: User,
+                    as: 'User',
+                    attributes: ['username']
+                }
             ],
-            limit: 10
+            order: [[sequelize.literal('likeCount'), 'DESC']],
+            limit: 5 // Adjust the limit as needed
         });
 
-        console.log('Fetched comments:', comments);
-        res.json(comments);
-    } catch (err) {
-        console.error('Erreur lors de la récupération des commentaires les plus likés:', err);
-        res.status(500).json({ error: 'Erreur lors de la récupération des commentaires les plus likés' });
+        const formattedComments = comments.map(comment => ({
+            id: comment.id,
+            mangaName: comment.mangaName,
+            scan: comment.scan,
+            userId: comment.userId,
+            comment: escapeHtml(comment.comment),
+            created_at: comment.createdAt,
+            username: comment.User ? comment.User.username : 'Unknown User',
+            likeCount: comment.dataValues.likeCount
+        }));
+
+        res.json(formattedComments);
+    } catch (error) {
+        console.error('Error fetching top liked comments:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 exports.addReply = async (req, res) => {
     try {
         const { commentId, reply } = req.body;
         const userId = req.session.user.id;
+        console.log('Adding reply with commentId:', commentId, 'userId:', userId);
 
-        const newReply = await CommentReply.create({ comment_id: commentId, user_id: userId, reply });
+        const newReply = await CommentReply.create({
+            commentId,  // Assurez-vous que cela correspond bien à votre modèle
+            userId,     // Assurez-vous que cela correspond bien à votre modèle
+            reply: escapeHtml(reply)
+        });
+
 
         res.status(201).json({
             id: newReply.id,

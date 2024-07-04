@@ -24,17 +24,22 @@ const Mangaread = () => {
     const [numPages, setNumPages] = useState(null);
     const canvasRef = useRef(null);
 
-    const serverUrl = `${window.location.protocol}//${window.location.hostname}:3001`; // URL du serveur dynamique
+    const serverUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
     const scanUrl = `${serverUrl}/Mangas/${mangaName}/${scan}`;
 
     useEffect(() => {
-        axios.get(`/api/comments/${mangaName}/${scan}`)
-            .then(res => setComments(res.data))
-            .catch(err => console.error(err));
+        axios.get(`/api/comments/${mangaName}/${scan}/comments`)
+            .then(res => {
+                console.log('Response from API:', res.data);
+                if (res.data.length > 0) {
+                    setComments(res.data);
+                }
+            })
+            .catch(err => console.error('Error fetching comments:', err));
 
         axios.get(`/api/comments/${mangaName}/${scan}/top-liked`)
             .then(res => setTopLikedComments(res.data))
-            .catch(err => console.error(err));
+            .catch(err => console.error(err));    
 
         axios.get('/api/auth/checkAuth', { withCredentials: true })
             .then(response => {
@@ -47,6 +52,7 @@ const Mangaread = () => {
                 console.error('Erreur lors de la vérification de l\'authentification:', error);
             });
     }, [mangaName, scan]);
+
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -98,7 +104,7 @@ const Mangaread = () => {
         if (newComment.trim() === '') return;
         axios.post('/api/comments/add', { mangaName, scan, comment: newComment }, { withCredentials: true })
             .then(res => {
-                setComments([...comments, { ...res.data, username }]);
+                setComments([...comments, { ...res.data, username, replies: [] }]);
                 setNewComment('');
             })
             .catch(err => console.error(err));
@@ -112,7 +118,7 @@ const Mangaread = () => {
                     if (comment.id === commentId) {
                         return {
                             ...comment,
-                            replies: [...comment.replies, { ...res.data, username }]
+                            replies: [...comment.replies || [], { ...res.data, username }]
                         };
                     }
                     return comment;
@@ -125,6 +131,10 @@ const Mangaread = () => {
     };
 
     const handleLikeComment = (commentId) => {
+        if (!isAuthenticated) {
+            alert('Connectez-vous pour interagir avec les autres utilisateurs.');
+            return;
+        }
         axios.post('/api/likes/add', { commentId }, { withCredentials: true })
             .then(() => {
                 setComments(comments.map(comment => {
@@ -135,6 +145,14 @@ const Mangaread = () => {
                 }));
             })
             .catch(err => console.error(err));
+    };
+
+    const handleReplyClick = (commentId) => {
+        if (!isAuthenticated) {
+            alert('Connectez-vous pour interagir avec les autres utilisateurs.');
+            return;
+        }
+        setReplyingTo(replyingTo === commentId ? null : commentId);
     };
 
     const handleCanvasClick = (event) => {
@@ -152,8 +170,8 @@ const Mangaread = () => {
 
     return (
         <div className="main-container mt-3 text-light">
-            <h1 className="text-center mb-3">{mangaName}</h1>
-            <h2 className='text-start  mb-3'>Chapitre: {scan}</h2>
+            <h1 className="text-center mb-3">Lire {mangaName} Chapitre: {scan}</h1>
+            {/* <h2 className='text-center mb-3'>Chapitre: {scan}</h2> */}
             <div className="manga-container mb-4" onClick={handleCanvasClick}>
                 <canvas ref={canvasRef}></canvas>
             </div>
@@ -184,30 +202,22 @@ const Mangaread = () => {
                             <div className="card-body">
                                 <p><strong>{comment.username}</strong>: {comment.comment}</p>
                                 <div className="d-flex justify-content-between align-items-center">
-                                    {isAuthenticated ? (
-                                        <>
-                                            <button
-                                                className="btn btn-link p-0"
-                                                onClick={() => handleLikeComment(comment.id)}
-                                                style={{ border: 'none', background: 'none', color: comment.liked ? 'red' : 'blue' }}
-                                            >
-                                                <i className={`bi ${comment.liked ? 'bi-heart-fill' : 'bi-heart'}`}></i>
-                                            </button>
-                                            <button
-                                                className="btn btn-link p-0"
-                                                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                                                style={{ border: 'none', background: 'none' }}
-                                            >
-                                                <i className="bi bi-reply"></i> Répondre
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button className="btn btn-link p-0" style={{ border: 'none', background: 'none' }}>
-                                            <i className="bi bi-reply"></i> Répondre
-                                        </button>
-                                    )}
+                                    <button
+                                        className="btn btn-link p-0"
+                                        onClick={() => handleLikeComment(comment.id)}
+                                        style={{ border: 'none', background: 'none', color: comment.liked ? 'red' : 'blue' }}
+                                    >
+                                        <i className={`bi ${comment.liked ? 'bi-heart-fill' : 'bi-heart'}`}></i>
+                                    </button>
+                                    <button
+                                        className="btn btn-link p-0"
+                                        onClick={() => handleReplyClick(comment.id)}
+                                        style={{ border: 'none', background: 'none' }}
+                                    >
+                                        <i className="bi bi-reply-fill fs-4 text-white"></i> 
+                                    </button>
                                 </div>
-                                {replyingTo === comment.id && (
+                                {replyingTo === comment.id && isAuthenticated && (
                                     <div className="form-group mt-2">
                                         <textarea
                                             className="form-control"
@@ -239,7 +249,7 @@ const Mangaread = () => {
 
             {topLikedComments.length > 0 && (
                 <div className="comment-bubble">
-                    <strong>Commentaire le plus aimé :</strong> {topLikedComments[currentTopCommentIndex]?.comment}
+                    <strong>Top Coms :</strong> {topLikedComments[currentTopCommentIndex]?.comment}
                 </div>
             )}
         </div>

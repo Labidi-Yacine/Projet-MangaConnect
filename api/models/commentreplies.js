@@ -1,50 +1,47 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const Comment = require('./comment');
-const User = require('./user');
+module.exports = (sequelize, DataTypes) => {
 
-class CommentReply extends Model {}
-
-CommentReply.init({
+const CommentReply = sequelize.define('CommentReply', {
   id: {
     type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true,
-    autoIncrement: true
   },
-  comment_id: {
+  commentId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    field: 'comment_id',
     references: {
-      model: Comment,
-      key: 'id'
-    }
+      model: 'Comment',
+      key: 'id',
+    },
   },
-  user_id: {
+  userId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    field: 'user_id',
     references: {
-      model: User,
-      key: 'id'
-    }
+      model: 'User',
+      key: 'id',
+    },
   },
   reply: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: false,
   },
-  created_at: {
+  createdAt: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  }
+    defaultValue: DataTypes.NOW,
+    field: 'created_at',
+  },
 }, {
-  sequelize,
-  modelName: 'CommentReply',
+  timestamps: false,
   tableName: 'comment_replies',
-  timestamps: false
 });
 
-// Comment.hasMany(CommentReply, { foreignKey: 'comment_id', onDelete: 'CASCADE' });
-// User.hasMany(CommentReply, { foreignKey: 'user_id', onDelete: 'CASCADE' });
-// CommentReply.belongsTo(Comment, { foreignKey: 'comment_id' });
-// CommentReply.belongsTo(User, { foreignKey: 'user_id' });
+CommentReply.associate = (models) => {
+  CommentReply.belongsTo(models.Comment, { foreignKey: 'comment_id', as: 'Comment' });
+  CommentReply.belongsTo(models.User, { foreignKey: 'user_id', as: 'User' });
+};
 
-module.exports = CommentReply;
+
+return CommentReply}

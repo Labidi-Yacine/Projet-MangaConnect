@@ -11,27 +11,27 @@ const upload = multer({ dest: 'uploads/' }); // Dossier temporaire pour les fich
 
 
 // Manga routes
-router.get('/mangas', isAuthenticated, isAdmin, adminController.getMangas); // Nouvelle route pour récupérer les mangas
-router.post('/mangas', isAuthenticated, isAdmin, adminController.addManga);
-router.delete('/mangas/delete/:mangaName', isAuthenticated, isAdmin, adminController.deleteManga);
-router.put('/mangas/update/:mangaName', isAuthenticated, isAdmin, adminController.updateManga);
+router.get('/mangas', isAuthenticated,  adminController.getMangas); // Nouvelle route pour récupérer les mangas
+router.post('/mangas', isAuthenticated,  adminController.addManga);
+router.delete('/mangas/delete/:mangaName', isAuthenticated,  adminController.deleteManga);
+router.put('/mangas/update/:mangaName', isAuthenticated,  adminController.updateManga);
 
 // Nouvelle route pour récupérer les données d'un manga spécifique
-router.get('/mangas/:mangaName', isAuthenticated, isAdmin, adminController.getMangaByName);
+router.get('/mangas/:mangaName', isAuthenticated,  adminController.getMangaByName);
 
  
 // Scan routes
-router.post('/scans/add', isAuthenticated, isAdmin, upload.single('pdf'), adminController.addScan);
-router.delete('/scans/delete/:mangaName/:scanName', isAuthenticated, isAdmin, adminController.deleteScan);
-router.put('/scans/update/:mangaName/:scanName', isAuthenticated, isAdmin, adminController.updateScan);
+router.post('/scans/add', isAuthenticated, upload.single('pdf'), adminController.addScan);
+router.delete('/scans/delete/:mangaName/:scanName', isAuthenticated,  adminController.deleteScan);
+router.put('/scans/update/:mangaName/:scanName', isAuthenticated, adminController.updateScan);
 // // User routes
-router.get('/users', isAuthenticated, isAdmin, adminController.getUsers);
-router.delete('/users/delete/:userId', isAuthenticated, isAdmin, adminController.deleteUser);
-router.put('/users/update/:userId', isAuthenticated, isAdmin, adminController.updateUser);
+router.get('/users', isAuthenticated, adminController.getUsers);
+router.delete('/users/delete/:userId', isAuthenticated,  adminController.deleteUser);
+router.put('/users/update/:userId', isAuthenticated, adminController.updateUser);
 
 // // Comment routes
-router.delete('/comments/delete/:commentId', isAuthenticated, isAdmin, adminController.deleteComment);
-router.get('/comments', isAuthenticated, isAdmin, adminController.getComments);  
+router.delete('/comments/delete/:commentId', isAuthenticated,  adminController.deleteComment);
+router.get('/comments', isAuthenticated, adminController.getComments);  
 
 
 module.exports = router;
